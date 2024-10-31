@@ -15,8 +15,9 @@ Further, the listing should be access-controlled (via HTTP authentication). So y
 
 Build the image like this:
 ```
-docker build --tag syncthing-listing --build-arg USERNAME=username --build-arg PASSWORD=password .
+PASSWORD="the password" docker build --tag syncthing-listing --build-arg USERNAME="the username" --secret id=password,env=PASSWORD .
 ```
+You should replace the username and the password in quotation marks with the values of your own choice.
 
 Run the image like this:
 ```
@@ -30,6 +31,6 @@ The above command will not return you the prompt in the shell. If you want that 
 If you want to get a shell in the container, append a `/bin/bash` to the run command. Then, inside the container, you may want to call `apachectl start` to start the server in the background.
 
 Notes:
-* The file permissions are not changed from the host to the container. The files need to be world-readable so that Apache can actually deliver them to the browser.
+* The file permissions are not changed/translated from the host to the container. The files need to be world-readable so that Apache can actually deliver them to the browser.
 * There is no SSL/HTTPS involved here. It's treated as out of scope here and expected to be added independently with some reverse proxy mechanism that does the SSL termination.
 

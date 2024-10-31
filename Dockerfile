@@ -1,7 +1,6 @@
 FROM httpd:latest
 
 ARG USERNAME
-ARG PASSWORD
 
 # This is where the files are mounted to later.
 RUN mkdir /data
@@ -16,17 +15,18 @@ RUN sed -i "s|LoadModule dir_module modules/mod_dir.so|#LoadModule dir_module mo
 RUN sed -i "s|DocumentRoot \"/usr/local/apache2/htdocs\"|DocumentRoot \"/data\"|" /usr/local/apache2/conf/httpd.conf
 
 # Create the new <Directory> section. (We keep the <Directory "/usr/local/apache2/htdocs"> as is. It's now unused anyway.)
-RUN echo "<Directory \"/data\">" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  Options Indexes" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  IndexOptions Charset=UTF-8" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  IndexOptions NameWidth=*" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  AllowOverride AuthConfig" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  AuthType Basic" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  AuthName syncthing" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  AuthUserFile \"/usr/local/apache2/passwords\"" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "  Require user ${USERNAME}" >> /usr/local/apache2/conf/httpd.conf
-RUN echo "</Directory>" >> /usr/local/apache2/conf/httpd.conf
+RUN cat <<EOF >> /usr/local/apache2/conf/httpd.conf
+<Directory "/data">
+  Options Indexes
+  IndexOptions Charset=UTF-8
+  IndexOptions NameWidth=*
+  AllowOverride AuthConfig
+  AuthType Basic
+  AuthName syncthing
+  AuthUserFile "/usr/local/apache2/passwords"
+  Require user ${USERNAME}
+</Directory>
+EOF
 
 # Create the password file.
-RUN htpasswd -bc /usr/local/apache2/passwords ${USERNAME} ${PASSWORD}
-
+RUN --mount=type=secret,id=password htpasswd -bc /usr/local/apache2/passwords "${USERNAME}" "$(cat /run/secrets/password)"
